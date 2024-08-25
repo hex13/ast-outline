@@ -39,19 +39,15 @@ describe('outline', () => {
 			{
 				type: 'class', name: 'Foo',
 				methods: [
-					{type: 'function', name: 'someMethod', params: [{name: 'a'}, {name: 'b'}, {name: 'c'}]},
-					{type: 'function', name: 'otherMethod', params: []}
+					FunctionNode('someMethod', [{name: 'a'}, {name: 'b'}, {name: 'c'}]),
+					FunctionNode('otherMethod'),
 				],
 			},
 			{
 				type: 'class', name: 'Bar',
 				methods: [
-					{type: 'function', name: 'bar1', params: [{name: 'c'}]},
-					{type: 'function', name: 'bar2',
-						params: [
-							{name: '{ someProp, someOtherProp }'}
-						]
-					}
+					FunctionNode('bar1', [{name:'c'}]),
+					FunctionNode('bar2', [{name: '{ someProp, someOtherProp }'}]),
 				],
 			},
 		]);
@@ -63,12 +59,7 @@ describe('outline', () => {
 			{
 				type: 'class', name: 'Calculator', 
 				methods: [
-					{
-						type: 'function', name: 'add', params: [{name: 'a'}, {name: 'b'}],
-						meta: {
-							info: 'adds two numbers',
-						}
-					},
+					{...FunctionNode('add', [{name: 'a'}, {name: 'b'}]), meta: {info: 'adds two numbers'}},
 					FunctionNode('foo'),
 					{...FunctionNode('doge'), meta: {animal: 'dog'}},
 				],
