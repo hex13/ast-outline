@@ -20,18 +20,17 @@ const getName = node => {
 	return '???';
 }
 
-const ClassNode = (name) => ({
+export const ClassNode = (name) => ({
 	type: 'class',
 	name,
 	methods: [],
 });
 
-const FunctionNode = (name, params = []) => ({
+export const FunctionNode = (name, params = []) => ({
 	type: 'function',
 	name,
 	params,
 });
-
 
 export function createOutline(ast) {
 	const outline = [];
@@ -41,11 +40,21 @@ export function createOutline(ast) {
 			const outlineNode = ClassNode(getName(path.node));
 			path.node.outlineNode = outlineNode;
 			outline.push(outlineNode);
+
 		},
 		ClassMethod(path) {
 			const classNode = path.parentPath.parentPath.node.outlineNode;
 			const functionNode = FunctionNode(getName(path.node), path.node.params.map(p => ({name: getName(p)})));
 			classNode.methods.push(functionNode);
+			if (path.node.leadingComments) {
+				path.node.leadingComments.forEach(c => {
+					const match = c.value.match(/^@(\w+) +(.*)/);
+					if (match) {
+						functionNode.meta = functionNode.meta || {};
+						functionNode.meta[match[1]] = match[2];
+					}
+				});
+			}
 		}
 	});
 

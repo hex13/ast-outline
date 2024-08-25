@@ -1,4 +1,4 @@
-import { createOutline } from './index.js';
+import { createOutline, FunctionNode } from './index.js';
 import { parse } from './parse.js';
 import * as assert from 'assert';
 
@@ -12,10 +12,27 @@ class Bar {
 	bar1(c) {}
 	bar2({ someProp, someOtherProp }) {}
 }
+`;
 
+const sourceWithDocs = `
+class Calculator {
+	//@info adds two numbers
+	add(a, b) {
+
+	}
+	// some comment
+	foo() {
+
+	}
+	//@animal dog
+	doge() {
+
+	}
+
+}
 `;
 describe('outline', () => {
-	it('', () => {
+	it('createOutline', () => {
 		const ast = parse(source);
 		const outline = createOutline(ast);
 		assert.deepStrictEqual(outline, [
@@ -39,4 +56,24 @@ describe('outline', () => {
 			},
 		]);
 	});
+	it('parses docs', () => {
+		const ast = parse(sourceWithDocs);
+		const outline = createOutline(ast);
+		assert.deepStrictEqual(outline, [
+			{
+				type: 'class', name: 'Calculator', 
+				methods: [
+					{
+						type: 'function', name: 'add', params: [{name: 'a'}, {name: 'b'}],
+						meta: {
+							info: 'adds two numbers',
+						}
+					},
+					FunctionNode('foo'),
+					{...FunctionNode('doge'), meta: {animal: 'dog'}},
+				],
+			}
+		]);
+	});
+
 });
