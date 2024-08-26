@@ -55,6 +55,10 @@ export function createOutline(ast) {
 					}
 				});
 			}
+		},
+		FunctionDeclaration(path) {
+			const functionNode = FunctionNode(getName(path.node), path.node.params.map(p => ({name: getName(p)})));
+			outline.push(functionNode);
 		}
 	});
 

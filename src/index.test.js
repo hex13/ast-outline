@@ -28,9 +28,9 @@ class Calculator {
 	doge() {
 
 	}
-
 }
 `;
+
 describe('outline', () => {
 	it('createOutline', () => {
 		const ast = parse(source);
@@ -57,13 +57,30 @@ describe('outline', () => {
 		const outline = createOutline(ast);
 		assert.deepStrictEqual(outline, [
 			{
-				type: 'class', name: 'Calculator', 
+				type: 'class', name: 'Calculator',
 				methods: [
 					{...FunctionNode('add', [{name: 'a'}, {name: 'b'}]), meta: {info: 'adds two numbers'}},
 					FunctionNode('foo'),
 					{...FunctionNode('doge'), meta: {animal: 'dog'}},
 				],
 			}
+		]);
+	});
+
+	it('functions', () => {
+		const source = `
+			function foo123() {
+
+			}
+			function bar456(a, b) {
+
+			}
+		`;
+		const ast = parse(source);
+		const outline = createOutline(ast);
+		assert.deepStrictEqual(outline, [
+			FunctionNode('foo123'),
+			FunctionNode('bar456', [{name: 'a'}, {name: 'b'}]),
 		]);
 	});
 
