@@ -84,4 +84,24 @@ describe('outline', () => {
 		]);
 	});
 
+	it('loc information for functions', () => {
+		const source = `
+			function foo123() {
+
+			}
+		`;
+		const ast = parse(source);
+		let node, loc;
+
+		node = ast.program.body[0];
+		assert.deepStrictEqual(node.type, 'FunctionDeclaration');
+		assert.ok(node.loc);
+		loc = structuredClone(node.loc);
+
+		const outline = createOutline(ast, {loc: true});
+		assert.deepStrictEqual(outline, [
+			{...FunctionNode('foo123'), loc},
+		]);
+	});
+
 });

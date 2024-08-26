@@ -32,8 +32,16 @@ export const FunctionNode = (name, params = []) => ({
 	params,
 });
 
-export function createOutline(ast) {
+
+export function createOutline(ast, opts = {}) {
 	const outline = [];
+
+	const intoOutlineNode = (node) => {
+		const outlineNode = FunctionNode(getName(node), node.params.map(p => ({name: getName(p)})));
+		if (opts.loc) outlineNode.loc = structuredClone(node.loc);
+		return outlineNode;
+	}
+
 
 	traverse(ast, {
 		ClassDeclaration(path) {
@@ -44,7 +52,7 @@ export function createOutline(ast) {
 		},
 		ClassMethod(path) {
 			const classNode = path.parentPath.parentPath.node.outlineNode;
-			const functionNode = FunctionNode(getName(path.node), path.node.params.map(p => ({name: getName(p)})));
+			const functionNode = intoOutlineNode(path.node)
 			classNode.methods.push(functionNode);
 			if (path.node.leadingComments) {
 				path.node.leadingComments.forEach(c => {
@@ -57,7 +65,7 @@ export function createOutline(ast) {
 			}
 		},
 		FunctionDeclaration(path) {
-			const functionNode = FunctionNode(getName(path.node), path.node.params.map(p => ({name: getName(p)})));
+			const functionNode = intoOutlineNode(path.node);
 			outline.push(functionNode);
 		}
 	});
