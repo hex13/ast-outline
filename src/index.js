@@ -69,6 +69,5 @@ export function createOutline(ast, opts = {}) {
 			outline.push(functionNode);
 		}
 	});
-
-	return outline;
+	return { outline };
 }

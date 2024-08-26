@@ -34,7 +34,7 @@ class Calculator {
 describe('outline', () => {
 	it('createOutline', () => {
 		const ast = parse(source);
-		const outline = createOutline(ast);
+		const { outline } = createOutline(ast);
 		assert.deepStrictEqual(outline, [
 			{
 				type: 'class', name: 'Foo',
@@ -54,7 +54,7 @@ describe('outline', () => {
 	});
 	it('parses docs', () => {
 		const ast = parse(sourceWithDocs);
-		const outline = createOutline(ast);
+		const { outline } = createOutline(ast);
 		assert.deepStrictEqual(outline, [
 			{
 				type: 'class', name: 'Calculator',
@@ -77,7 +77,7 @@ describe('outline', () => {
 			}
 		`;
 		const ast = parse(source);
-		const outline = createOutline(ast);
+		const { outline } = createOutline(ast);
 		assert.deepStrictEqual(outline, [
 			FunctionNode('foo123'),
 			FunctionNode('bar456', [{name: 'a'}, {name: 'b'}]),
