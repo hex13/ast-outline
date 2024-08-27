@@ -60,6 +60,10 @@ export class LocTree {
 		};
 		return _search(this.data);
 	}
+	static addTag(locNode, tag) {
+		locNode.tags = locNode.tags || {};
+		locNode.tags[tag] = true;
+	}
 }
 export function Loc(start, end) {
 	return {
@@ -112,6 +116,16 @@ export function createOutline(ast, opts = {}) {
 		exit(path) {
 			if (locTrees.length > 1) {
 				const locNode = locTrees.pop();
+
+				if (path.node.type == 'Identifier') {
+					const parentType = path.parentPath.node.type;
+					if (
+						parentType == 'ClassMethod' ||
+						parentType == 'FunctionDeclaration'
+					) {
+						LocTree.addTag(locNode, 'function');
+					}
+				}
 				locTrees.at(-1).children.push(locNode);
 			}
 		}

@@ -137,6 +137,8 @@ describe('outline', () => {
 			'class Foo {',
 			'someMethod() {}',
 			'}',
+			'function foo() {',
+			'}',
 		].join('\n');
 		const ast = parse(source);
 		const { outline, locTree } = createOutline(ast, {loc: true});
@@ -150,13 +152,20 @@ describe('outline', () => {
 				line: 2,
 				column: 10,
 			}
-		}
-		const outlineNode = locTree.find(2, 3);
+		};
+		let outlineNode;
+		outlineNode = locTree.find(2, 3);
 		assert.strictEqual(outlineNode.type, 'Identifier');
 		assert.strictEqual(outlineNode.loc.start.line, expectedLoc.start.line);
 		assert.strictEqual(outlineNode.loc.start.column, expectedLoc.start.column);
 		assert.strictEqual(outlineNode.loc.end.line, expectedLoc.end.line);
 		assert.strictEqual(outlineNode.loc.end.column, expectedLoc.end.column);
+
+		assert.deepStrictEqual(outlineNode.tags, {function: true});
+
+		outlineNode = locTree.find(4, 9);
+		assert.strictEqual(outlineNode.type, 'Identifier');
+		assert.deepStrictEqual(outlineNode.tags, {function: true});
 	});
 
 });
