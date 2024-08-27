@@ -129,11 +129,18 @@ export function createOutline(ast, opts = {}) {
 						LocTree.addTag(locNode, 'function');
 					} else if (parentType == 'CallExpression') {
 						LocTree.addTag(locNode, 'call');
-					} else if (parentType == 'MemberExpression' && path.key == 'property'
-						&& path.parentPath.key == 'callee'
-						&& path.parentPath.parentPath.node.type == 'CallExpression'
-					) {
-						LocTree.addTag(locNode, 'call');
+					} else if (parentType == 'MemberExpression' && path.key == 'object') {
+						LocTree.addTag(locNode, 'name');
+					} else if (parentType == 'MemberExpression' && path.key == 'property') {
+						if (path.parentPath.key == 'callee' && path.parentPath.parentPath.node.type == 'CallExpression') {
+							LocTree.addTag(locNode, 'call');
+						} else {
+							LocTree.addTag(locNode, 'property');
+						}
+					} else if (parentType == 'ObjectProperty') {
+						LocTree.addTag(locNode, 'name');
+					} else if (parentType == 'AssignmentExpression' && path.key == 'left') {
+						LocTree.addTag(locNode, 'name');
 					}
 				}
 				locTrees.at(-1).children.push(locNode);
