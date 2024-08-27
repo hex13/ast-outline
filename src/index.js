@@ -127,7 +127,7 @@ export function createOutline(ast, opts = {}) {
 						parentType == 'FunctionDeclaration'
 					) {
 						LocTree.addTag(locNode, 'function');
-					} else if (parentType == 'CallExpression') {
+					} else if (parentType == 'CallExpression' && path.key == 'callee') {
 						LocTree.addTag(locNode, 'call');
 					} else if (parentType == 'MemberExpression' && path.key == 'object') {
 						LocTree.addTag(locNode, 'name');
@@ -140,6 +140,8 @@ export function createOutline(ast, opts = {}) {
 					} else if (parentType == 'ObjectProperty') {
 						LocTree.addTag(locNode, 'name');
 					} else if (parentType == 'AssignmentExpression' && path.key == 'left') {
+						LocTree.addTag(locNode, 'name');
+					} else {
 						LocTree.addTag(locNode, 'name');
 					}
 				}
