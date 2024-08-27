@@ -75,6 +75,7 @@ export function Loc(start, end) {
 export function createOutline(ast, opts = {}) {
 	const outline = [];
 	const locTrees = [];
+	const source = opts.source || '';
 	const intoOutlineNode = (node) => {
 		const outlineNode = FunctionNode(getName(node), node.params.map(p => ({name: getName(p)})));
 		if (opts.loc) outlineNode.loc = structuredClone(node.loc);
@@ -130,5 +131,23 @@ export function createOutline(ast, opts = {}) {
 			}
 		}
 	});
-	return { outline, locTree: new LocTree(locTrees[0]) };
+
+	let lastEnd = 0;
+
+	const locTree = new LocTree(locTrees[0]);
+	const tokens = [];
+	ast.tokens.forEach(tok => {
+		if (tok.start > lastEnd) {
+			tokens.push({text: source.slice(lastEnd, tok.start)});
+		}
+		const locNode = locTree.find(tok.loc.start.line, tok.loc.start.column);
+		tokens.push({
+			start: tok.start, end: tok.end,
+			originalToken: tok,
+			text: source.slice(tok.start, tok.end),
+			tags: locNode?.tags,
+		});
+		lastEnd = tok.end;
+	});
+	return { outline, locTree, tokens };
 }

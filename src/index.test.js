@@ -2,8 +2,8 @@ import { createOutline, FunctionNode, LocTree, Loc } from './index.js';
 import { parse } from './parse.js';
 import * as assert from 'assert';
 
-const source = `
-class Foo {
+const source = (
+`class Foo {
 	someMethod(a, b, c = 123) {}
 	otherMethod() {}
 }
@@ -12,7 +12,7 @@ class Bar {
 	bar1(c) {}
 	bar2({ someProp, someOtherProp }) {}
 }
-`;
+`);
 
 const sourceWithDocs = `
 class Calculator {
@@ -168,4 +168,41 @@ describe('outline', () => {
 		assert.deepStrictEqual(outlineNode.tags, {function: true});
 	});
 
+	it('generate tokens', () => {
+		const source = `function foo() {
+			const value = 123;
+		}`;
+		const ast = parse(source);
+		const { outline, locTree, tokens } = createOutline(ast, {loc: true, source});
+		assert.strictEqual(tokens.map(t => t.text).join(''), source);
+		tokens.forEach(tok => {
+			assert.strictEqual(tok.originalToken?.start, tok.start);
+			assert.strictEqual(tok.originalToken?.end, tok.end);
+		});
+	});
+
+	it('assigns tags for function declaration', () => {
+		const source = `function foo() {
+			const value = 123;
+		}`;
+		const ast = parse(source);
+		const { outline, locTree, tokens } = createOutline(ast, {loc: true, source});
+
+		const functionIdent = tokens[2];
+		assert.strictEqual(functionIdent.text, 'foo');
+		assert.deepStrictEqual(functionIdent.tags, {function: true});
+	});
+
+	it('assigns tags for method declaration', () => {
+		const source = `class Foo {
+			someMethod() {
+
+			}
+		}`;
+		const ast = parse(source);
+		const { outline, locTree, tokens } = createOutline(ast, {loc: true, source});
+		const functionIdent = tokens[6];
+		assert.strictEqual(functionIdent.text, 'someMethod');
+		assert.deepStrictEqual(functionIdent.tags, {function: true});
+	});
 });
