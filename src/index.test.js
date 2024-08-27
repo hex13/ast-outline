@@ -139,6 +139,9 @@ describe('outline', () => {
 			'}',
 			'function foo() {',
 			'}',
+			'doSomething()',
+			'someObject.blah()',
+			'foo(someObject.blah)',
 		].join('\n');
 		const ast = parse(source);
 		const { outline, locTree } = createOutline(ast, {loc: true});
@@ -166,6 +169,23 @@ describe('outline', () => {
 		outlineNode = locTree.find(4, 9);
 		assert.strictEqual(outlineNode.type, 'Identifier');
 		assert.deepStrictEqual(outlineNode.tags, {function: true});
+
+		outlineNode = locTree.find(6, 1);
+		assert.strictEqual(outlineNode.type, 'Identifier');
+		assert.deepStrictEqual(outlineNode.tags, {call: true});
+
+		outlineNode = locTree.find(7, 1);
+		assert.strictEqual(outlineNode.type, 'Identifier');
+		assert.deepStrictEqual(outlineNode.tags, undefined);
+
+		outlineNode = locTree.find(7, 11);
+		assert.strictEqual(outlineNode.type, 'Identifier');
+		assert.deepStrictEqual(outlineNode.tags, {call: true});
+
+		outlineNode = locTree.find(8, 17);
+		assert.strictEqual(outlineNode.type, 'Identifier');
+		assert.deepStrictEqual(outlineNode.tags, undefined);
+
 	});
 
 	it('generate tokens', () => {

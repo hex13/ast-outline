@@ -52,7 +52,9 @@ export class LocTree {
 	find(line, column) {
 		const _search = (node) => {
 			const { start, end } = node.loc;
-			if (!node.children || node.children.length == 0) return node;
+			if (!node.children || node.children.length == 0) {
+				return node;
+			}
 			const ch = node.children.find(ch => {
 				return inRange(line, column, ch.loc);
 			});
@@ -125,6 +127,13 @@ export function createOutline(ast, opts = {}) {
 						parentType == 'FunctionDeclaration'
 					) {
 						LocTree.addTag(locNode, 'function');
+					} else if (parentType == 'CallExpression') {
+						LocTree.addTag(locNode, 'call');
+					} else if (parentType == 'MemberExpression' && path.key == 'property'
+						&& path.parentPath.key == 'callee'
+						&& path.parentPath.parentPath.node.type == 'CallExpression'
+					) {
+						LocTree.addTag(locNode, 'call');
 					}
 				}
 				locTrees.at(-1).children.push(locNode);
