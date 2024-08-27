@@ -32,16 +32,50 @@ export const FunctionNode = (name, params = []) => ({
 	params,
 });
 
+function inRange(line, column, loc) {
+	if (loc.start.line > line || loc.end.line < line) {
+		return false;
+	}
+	if (line == loc.start.line && column < loc.start.column) {
+		return false;
+	}
+	if (line == loc.end.line && column > loc.end.column) {
+		return false;
+	}
+	return true;
+}
+
+export class LocTree {
+	constructor(data) {
+		this.data = data;
+	}
+	find(line, column) {
+		const _search = (node) => {
+			const { start, end } = node.loc;
+			if (!node.children || node.children.length == 0) return node;
+			const ch = node.children.find(ch => {
+				return inRange(line, column, ch.loc);
+			});
+			if (ch) return _search(ch);
+		};
+		return _search(this.data);
+	}
+}
+export function Loc(start, end) {
+	return {
+		start,
+		end,
+	};
+}
 
 export function createOutline(ast, opts = {}) {
 	const outline = [];
-
+	const locTrees = [];
 	const intoOutlineNode = (node) => {
 		const outlineNode = FunctionNode(getName(node), node.params.map(p => ({name: getName(p)})));
 		if (opts.loc) outlineNode.loc = structuredClone(node.loc);
 		return outlineNode;
 	}
-
 
 	traverse(ast, {
 		ClassDeclaration(path) {
@@ -67,7 +101,20 @@ export function createOutline(ast, opts = {}) {
 		FunctionDeclaration(path) {
 			const functionNode = intoOutlineNode(path.node);
 			outline.push(functionNode);
+		},
+		enter(path) {
+			const locNode = {
+				type: path.node.type,
+				loc: path.node.loc, children: []
+			};
+			locTrees.push(locNode);
+		},
+		exit(path) {
+			if (locTrees.length > 1) {
+				const locNode = locTrees.pop();
+				locTrees.at(-1).children.push(locNode);
+			}
 		}
 	});
-	return { outline };
+	return { outline, locTree: new LocTree(locTrees[0]) };
 }
