@@ -11,8 +11,7 @@
   "description": "",
   "dependencies": {
     "@babel/parser": "^7.25.4",
-    "@babel/traverse": "^7.25.4",
-    "ast-outline": "^0.0.3"
+    "@babel/traverse": "^7.25.4"
   },
   "devDependencies": {
     "mocha": "^10.7.3"
