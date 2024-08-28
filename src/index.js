@@ -78,6 +78,7 @@ export function createOutline(ast, opts = {}) {
 	const outline = [];
 	const locTrees = [];
 	const source = opts.source || '';
+	const imports = [];
 	const intoOutlineNode = (node) => {
 		const outlineNode = FunctionNode(getName(node), node.params.map(p => ({name: getName(p)})));
 		if (opts.loc) outlineNode.loc = structuredClone(node.loc);
@@ -85,6 +86,28 @@ export function createOutline(ast, opts = {}) {
 	}
 
 	traverse(ast, {
+		ImportDeclaration(path) {
+			const { node } = path;
+			const what = node.specifiers.map(s => {
+				if (s.type == 'ImportNamespaceSpecifier') {
+					return {
+						namespace: true,
+						as: s.local.name,
+					}
+				}
+				if (s.type == 'ImportDefaultSpecifier') {
+					return {
+						default: true,
+						as: s.local.name,
+					}
+				}
+				return {
+					name: s.imported.name,
+					as: s.local.name,
+				};
+			});
+			imports.push({what, from: path.node.source.value});
+		},
 		ClassDeclaration(path) {
 			const outlineNode = ClassNode(getName(path.node));
 			path.node.outlineNode = outlineNode;
@@ -167,5 +190,5 @@ export function createOutline(ast, opts = {}) {
 		});
 		lastEnd = tok.end;
 	});
-	return { outline, locTree, tokens };
+	return { imports, outline, locTree, tokens };
 }

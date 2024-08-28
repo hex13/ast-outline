@@ -112,6 +112,40 @@ describe('outline', () => {
 		]);
 	});
 
+	it('import with destructuring', () => {
+		const source = `
+			import { x1, x2, sth as x3 } from 'first';
+		`;
+		const ast = parse(source);
+		const { outline, imports } = createOutline(ast);
+		assert.deepStrictEqual(imports, [
+			{what: [{name: 'x1', as: 'x1'}, {name: 'x2', as: 'x2'}, {name: 'sth', as: 'x3'}], from: 'first'},
+		]);
+	});
+
+	it('import default', () => {
+		const source = `
+			import d from 'second';
+		`;
+		const ast = parse(source);
+		const { outline, imports } = createOutline(ast);
+		assert.deepStrictEqual(imports, [
+			{what: [{default: true, as: 'd'}], from: 'second'},
+		]);
+	});
+
+	it('import namespace', () => {
+		const source = `
+			import * as S from 'third';
+		`;
+		const ast = parse(source);
+		const { outline, imports } = createOutline(ast);
+		assert.deepStrictEqual(imports, [
+			{what: [{namespace: true, as: 'S'}], from: 'third'},
+		]);
+	});
+
+
 	it('loc information for functions', () => {
 		const source = `
 			function foo123() {
