@@ -119,7 +119,7 @@ describe('outline', () => {
 		const ast = parse(source);
 		const { outline, imports } = createOutline(ast);
 		assert.deepStrictEqual(imports, [
-			{what: [{name: 'x1', as: 'x1'}, {name: 'x2', as: 'x2'}, {name: 'sth', as: 'x3'}], from: 'first'},
+			{what: {x1: 'x1', x2: 'x2', sth: 'x3'}, from: 'first'},
 		]);
 	});
 
@@ -130,7 +130,7 @@ describe('outline', () => {
 		const ast = parse(source);
 		const { outline, imports } = createOutline(ast);
 		assert.deepStrictEqual(imports, [
-			{what: [{default: true, as: 'd'}], from: 'second'},
+			{what: {default: 'd'}, from: 'second'},
 		]);
 	});
 
@@ -141,7 +141,7 @@ describe('outline', () => {
 		const ast = parse(source);
 		const { outline, imports } = createOutline(ast);
 		assert.deepStrictEqual(imports, [
-			{what: [{namespace: true, as: 'S'}], from: 'third'},
+			{what: {'*': 'S'}, from: 'third'},
 		]);
 	});
 

@@ -88,24 +88,18 @@ export function createOutline(ast, opts = {}) {
 	traverse(ast, {
 		ImportDeclaration(path) {
 			const { node } = path;
-			const what = node.specifiers.map(s => {
-				if (s.type == 'ImportNamespaceSpecifier') {
-					return {
-						namespace: true,
-						as: s.local.name,
-					}
-				}
+			const what = {};
+			node.specifiers.forEach(s => {
+				let k;
 				if (s.type == 'ImportDefaultSpecifier') {
-					return {
-						default: true,
-						as: s.local.name,
-					}
+					k = 'default';
+				} else if (s.type == 'ImportNamespaceSpecifier') {
+					k = '*';
+				} else {
+					k = s.imported.name;
 				}
-				return {
-					name: s.imported.name,
-					as: s.local.name,
-				};
-			});
+				what[k] = s.local.name;
+			})
 			imports.push({what, from: path.node.source.value});
 		},
 		ClassDeclaration(path) {
