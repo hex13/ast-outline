@@ -35,6 +35,18 @@ class Calculator {
 }
 `;
 
+function assertLocEquals(actual, expected) {
+	try {
+		assert.strictEqual(actual.start.line, expected.start.line);
+		assert.strictEqual(actual.start.column, expected.start.column);
+		assert.strictEqual(actual.end.line, expected.end.line);
+		assert.strictEqual(actual.end.column, expected.end.column);
+	} catch (e) {
+		console.error(`Incorrect loc\nActual: \n`, actual, '\nExpected:\n', expected);
+		throw e;
+	}
+}
+
 describe('LocTree', () => {
 	it('.find()', () => {
 		const locTree = new LocTree({
@@ -290,7 +302,7 @@ describe('outline', () => {
 	it('chain: single identifiers', () => {
 		const source = `foo; moon`;
 		const ast = parse(source);
-		const { chains } = createOutline(ast, {loc: true, source});
+		const { chains } = createOutline(ast, {loc: false, source});
 		assert.deepStrictEqual(chains, [
 			Chain([{name: 'foo'}]),
 			Chain([{name: 'moon'}]),
@@ -300,7 +312,7 @@ describe('outline', () => {
 	it('chains of member expressions', () => {
 		const source = `foo.bar.baz; qwe.rty`;
 		const ast = parse(source);
-		const { chains } = createOutline(ast, {loc: true, source});
+		const { chains } = createOutline(ast, {loc: false, source});
 		assert.deepStrictEqual(chains, [
 			Chain([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}]),
 			Chain([{name: 'qwe'}, {name: 'rty'}]),
@@ -309,17 +321,18 @@ describe('outline', () => {
 	it('chains: calls', () => {
 		const source = `hey(); hello()`;
 		const ast = parse(source);
-		const { chains } = createOutline(ast, {loc: true, source});
+		const { chains } = createOutline(ast, {loc: false, source});
 		assert.deepStrictEqual(chains, [
 			Chain([{type: 'call', name: 'hey'}]),
 			Chain([{type: 'call', name: 'hello'}]),
 		]);
 	});
 
+
 	it('chains: methods', () => {
 		const source = `someObject.someMethod()`;
 		const ast = parse(source);
-		const { chains } = createOutline(ast, {loc: true, source});
+		const { chains } = createOutline(ast, {loc: false, source});
 		assert.deepStrictEqual(chains, [
 			Chain([{name: 'someObject'}, {type: 'call', name: 'someMethod'}]),
 		]);
@@ -328,7 +341,7 @@ describe('outline', () => {
 	it('chains: methods + member expressions', () => {
 		const source = `someObject.someMethod().x.y.z().aa`;
 		const ast = parse(source);
-		const { chains } = createOutline(ast, {loc: true, source});
+		const { chains } = createOutline(ast, {loc: false, source});
 		assert.deepStrictEqual(chains, [
 			Chain([
 				{name: 'someObject'},
@@ -344,13 +357,67 @@ describe('outline', () => {
 	it('chains: functions with arguments', () => {
 		const source = `alert(foo);alert(abc.def)`;
 		const ast = parse(source);
-		const { chains } = createOutline(ast, {loc: true, source});
+		const { chains } = createOutline(ast, {loc: false, source});
 		assert.deepStrictEqual(chains, [
 			Chain([{type: 'call', name: 'alert'}]),
 			Chain([{name: 'foo'}]),
 			Chain([{type: 'call', name: 'alert'}]),
 			Chain([{name: 'abc'}, {name: 'def'}]),
 		]);
+	});
+
+	it('loc for chains', () => {
+		[
+			[
+				`computer`,
+				{
+					start: {line: 1, column: 0},
+					end: {line: 1, column: 8},
+				}
+			],
+			[
+				`foo.bar.baz`,
+				{
+					start: {line: 1, column: 0},
+					end: {line: 1, column: 11},
+				}
+			],
+			[
+				`doSth()`,
+				{
+					start: {line: 1, column: 0},
+					end: {line: 1, column: 7},
+				}
+			],
+			[
+				`console.log()`,
+				{
+					start: {line: 1, column: 0},
+					end: {line: 1, column: 13},
+				}
+			],
+			[
+				`console.log(foo.bar.baz)`,
+				[
+					{
+						start: {line: 1, column: 0},
+						end: {line: 1, column: 24},
+					},
+					{
+						start: {line: 1, column: 12},
+						end: {line: 1, column: 23},
+					},
+				]
+			],
+		].forEach(([source, locs]) => {
+			const ast = parse(source);
+			const { chains } = createOutline(ast, {loc: true, source});
+			(Array.isArray(locs)? locs : [locs])
+			.forEach((loc, i) => {
+				assertLocEquals(chains[i].loc, loc);
+			});
+		})
+
 	});
 
 });

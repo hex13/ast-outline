@@ -32,7 +32,13 @@ export const FunctionNode = (name, params = []) => ({
 	params,
 });
 
-export const Chain = (els) => els || [];
+export const Chain = (elements = [], opts) => {
+	const chain = {
+		elements,
+	};
+	if (opts?.loc) chain.loc = opts.loc;
+	return chain;
+};
 
 function inRange(line, column, loc) {
 	if (loc.start.line > line || loc.end.line < line) {
@@ -135,28 +141,30 @@ export function createOutline(ast, opts = {}) {
 		},
 		CallExpression: {
 			enter(path) {
-				if (path.key == 'expression') chains.push(Chain());
+				if (path.key == 'expression') chains.push(Chain([], opts.loc? {loc: path.node.loc} : null));
 			}
 		},
 		MemberExpression: {
 			enter(path) {
 				if (isExpressionStart(path)) {
-					chains.push(Chain());
+					const chain = Chain();
+					if (opts.loc) chain.loc = path.node.loc;
+					chains.push(chain);
 				}
 			},
 			exit(path) {
  				if (path.key == 'callee') {
-					chains.at(-1).at(-1).type = 'call';
+					chains.at(-1).elements.at(-1).type = 'call';
 				}
 			}
 		},
 		Identifier(path) {
 			const chainEl = {name: getName(path.node)};
 			if (isExpressionStart(path)) {
-				chains.push(Chain([chainEl]));
+				chains.push(Chain([chainEl], opts.loc? {loc: path.node.loc} : null));
 			} else if (chains.length) {
 				if (path.key == 'callee') chainEl.type = 'call';
-				chains.at(-1).push(chainEl);
+				chains.at(-1).elements.push(chainEl);
 			}
 		},
 		enter(path) {
