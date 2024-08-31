@@ -1,6 +1,10 @@
-import { createOutline, FunctionNode, LocTree, Loc } from './index.js';
+import { createOutline, FunctionNode, LocTree, Loc, Chain } from './index.js';
 import { parse } from './parse.js';
 import * as assert from 'assert';
+
+import Traverse from '@babel/traverse';
+const traverse = Traverse.default;
+
 
 const source = (
 `class Foo {
@@ -282,4 +286,71 @@ describe('outline', () => {
 		assert.strictEqual(functionIdent.text, 'someMethod');
 		assert.deepStrictEqual(functionIdent.tags, {function: true});
 	});
+
+	it('chain: single identifiers', () => {
+		const source = `foo; moon`;
+		const ast = parse(source);
+		const { chains } = createOutline(ast, {loc: true, source});
+		assert.deepStrictEqual(chains, [
+			Chain([{name: 'foo'}]),
+			Chain([{name: 'moon'}]),
+		]);
+	});
+
+	it('chains of member expressions', () => {
+		const source = `foo.bar.baz; qwe.rty`;
+		const ast = parse(source);
+		const { chains } = createOutline(ast, {loc: true, source});
+		assert.deepStrictEqual(chains, [
+			Chain([{name: 'foo'}, {name: 'bar'}, {name: 'baz'}]),
+			Chain([{name: 'qwe'}, {name: 'rty'}]),
+		]);
+	});
+	it('chains: calls', () => {
+		const source = `hey(); hello()`;
+		const ast = parse(source);
+		const { chains } = createOutline(ast, {loc: true, source});
+		assert.deepStrictEqual(chains, [
+			Chain([{type: 'call', name: 'hey'}]),
+			Chain([{type: 'call', name: 'hello'}]),
+		]);
+	});
+
+	it('chains: methods', () => {
+		const source = `someObject.someMethod()`;
+		const ast = parse(source);
+		const { chains } = createOutline(ast, {loc: true, source});
+		assert.deepStrictEqual(chains, [
+			Chain([{name: 'someObject'}, {type: 'call', name: 'someMethod'}]),
+		]);
+	});
+
+	it('chains: methods + member expressions', () => {
+		const source = `someObject.someMethod().x.y.z().aa`;
+		const ast = parse(source);
+		const { chains } = createOutline(ast, {loc: true, source});
+		assert.deepStrictEqual(chains, [
+			Chain([
+				{name: 'someObject'},
+				{type: 'call', name: 'someMethod'},
+				{name: 'x'},
+				{name: 'y'},
+				{type: 'call', name: 'z'},
+				{name: 'aa'},
+			]),
+		]);
+	});
+
+	it('chains: functions with arguments', () => {
+		const source = `alert(foo);alert(abc.def)`;
+		const ast = parse(source);
+		const { chains } = createOutline(ast, {loc: true, source});
+		assert.deepStrictEqual(chains, [
+			Chain([{type: 'call', name: 'alert'}]),
+			Chain([{name: 'foo'}]),
+			Chain([{type: 'call', name: 'alert'}]),
+			Chain([{name: 'abc'}, {name: 'def'}]),
+		]);
+	});
+
 });

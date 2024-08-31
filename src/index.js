@@ -32,6 +32,8 @@ export const FunctionNode = (name, params = []) => ({
 	params,
 });
 
+export const Chain = (els) => els || [];
+
 function inRange(line, column, loc) {
 	if (loc.start.line > line || loc.end.line < line) {
 		return false;
@@ -74,11 +76,16 @@ export function Loc(start, end) {
 	};
 }
 
+const isExpressionStart = path => {
+	return path.key == 'expression' || !isNaN(path.key);
+};
+
 export function createOutline(ast, opts = {}) {
 	const outline = [];
 	const locTrees = [];
 	const source = opts.source || '';
 	const imports = [];
+	const chains = [];
 	const intoOutlineNode = (node) => {
 		const outlineNode = FunctionNode(getName(node), node.params.map(p => ({name: getName(p)})));
 		if (opts.loc) outlineNode.loc = structuredClone(node.loc);
@@ -125,6 +132,32 @@ export function createOutline(ast, opts = {}) {
 		FunctionDeclaration(path) {
 			const functionNode = intoOutlineNode(path.node);
 			outline.push(functionNode);
+		},
+		CallExpression: {
+			enter(path) {
+				if (path.key == 'expression') chains.push(Chain());
+			}
+		},
+		MemberExpression: {
+			enter(path) {
+				if (isExpressionStart(path)) {
+					chains.push(Chain());
+				}
+			},
+			exit(path) {
+ 				if (path.key == 'callee') {
+					chains.at(-1).at(-1).type = 'call';
+				}
+			}
+		},
+		Identifier(path) {
+			const chainEl = {name: getName(path.node)};
+			if (isExpressionStart(path)) {
+				chains.push(Chain([chainEl]));
+			} else if (chains.length) {
+				if (path.key == 'callee') chainEl.type = 'call';
+				chains.at(-1).push(chainEl);
+			}
 		},
 		enter(path) {
 			const locNode = {
@@ -184,5 +217,5 @@ export function createOutline(ast, opts = {}) {
 		});
 		lastEnd = tok.end;
 	});
-	return { imports, outline, locTree, tokens };
+	return { imports, outline, locTree, tokens, chains };
 }
