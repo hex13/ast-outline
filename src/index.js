@@ -39,7 +39,7 @@ function inRange(line, column, loc) {
 	if (line == loc.start.line && column < loc.start.column) {
 		return false;
 	}
-	if (line == loc.end.line && column > loc.end.column) {
+	if (line == loc.end.line && column >= loc.end.column) {
 		return false;
 	}
 	return true;

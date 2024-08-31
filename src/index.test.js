@@ -195,6 +195,10 @@ describe('outline', () => {
 			}
 		};
 		let outlineNode;
+
+		outlineNode = locTree.find(1, 9);
+		assert.equal(outlineNode, undefined);
+
 		outlineNode = locTree.find(2, 3);
 		assert.strictEqual(outlineNode.type, 'Identifier');
 		assert.strictEqual(outlineNode.loc.start.line, expectedLoc.start.line);
